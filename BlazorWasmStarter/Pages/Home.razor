@@ -1,46 +1,122 @@
-﻿@page "/isloading"
+﻿@page "/"
+
+
+@using System.Text
 
 <PageTitle>Home</PageTitle>
 
-<button class="btn btn-success mb-3" @onmouseenter="HandleChangeLoadingButtonClick"  @onclick="HandleChangeLoadingButtonClick">Change Loading</button>
+<div class="input-group mb-3">
+    <input @bind="password" readonly="readonly" type="text" class="form-control">
+    <span @onmouseenter="@(() => OnEmojiHover("copy"))" @onmouseleave="@OnEmojiMouseLeft" class="input-group-text my-clickable-button @onHoverCopyCss" id="basic-addon2">📄</span>
+    <span @onclick="HandleGeneratePasswordClick" @onmouseenter="@(() => OnEmojiHover("generate"))" @onmouseleave="@OnEmojiMouseLeft" class="input-group-text my-clickable-button @onHoverGenerateCss" id="basic-addon3">🔄</span>
+    <span @onclick="HandleSavePasswordClick" @onmouseenter="@(() => OnEmojiHover("save"))" @onmouseleave="@OnEmojiMouseLeft" class="input-group-text my-clickable-button @onHoverSaveCss" id="basic-addon4">💾</span>
+</div>
 
-<h2 class="@(isCompany ? "text-info" : "text-danger")">TC Kimlik No</h2>
+<div class="card mt-3">
+    <div class="card-header">
+        💾 Saved Passwords
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            @foreach (var savedPassword in savedPasswords)
+            {
+                <li class="list-group-item">@savedPassword</li>
+            }
+        </ul>
+    </div>
+</div>
 
-@if (isCompany)
+@code
 {
-    <h2 class="text-info">Vergi Kimlik No</h2>
-}
-else
-{
-    <h2 class="text-danger">TC Kimlik No</h2>
-}
+    private string password = string.Empty;
+    private int passwordLength = 6;
+    private HashSet<string> savedPasswords = [];
 
-@* @if (isLoading)
-{
-    <h2>Loading 🔥</h2>
-}
-else
-{
-    <h1>@userName.ToLowerInvariant()</h1>
-}
- *@
+    private string onHoverCopyCss = string.Empty;
+    private string onHoverGenerateCss = string.Empty;
+    private string onHoverSaveCss = string.Empty;
 
+    private static Random random = new Random();
+    private static StringBuilder stringBuilder = new StringBuilder();
 
-@code{
+    private bool includeLowercase = true;
+    private bool includeUppercase = true;
+    private bool includeNumbers = true;
+    private bool includeSpecialChars = true;
 
-    private string userName = "Saadet Çatak";
-    private bool isLoading = false;
-    private bool isCompany = false;
+    private const string lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
+    private const string uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private const string numbers = "0123456789";
+    private const string specialCharacters = "!@#$%&*()_+-={};:?";
 
-    private void HandleChangeLoadingButtonClick()
+    
+
+    private void HandleSavePasswordClick()
     {
-        isLoading = !isLoading;
-        isCompany = !isCompany;
+        if (string.IsNullOrEmpty(password) || savedPasswords.Any(x=> x == password))
+         return;
+
+        savedPasswords.Add(password);
+    }
+
+    private void HandleGeneratePasswordClick()
+    {
+        stringBuilder.Clear();
+
+        var validChars = new StringBuilder();
+
+        // allLowercaseLetters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        if (includeLowercase)
+            validChars.Append(lowercaseLetters);
+
+        if (includeUppercase)
+            validChars.Append(uppercaseLetters);
+
+        if (includeNumbers)
+            validChars.Append(numbers);
+
+        if (includeSpecialChars)
+            validChars.Append(specialCharacters);
+
+
+        for (int i = 0; i < passwordLength; i++)
+        {
+            var randomIndex = random.Next(0, validChars.Length);
+
+            stringBuilder.Append(validChars[randomIndex]);
+
+        }
+
+        password = stringBuilder.ToString();
+    }
+
+    private void OnEmojiHover(string iconType)
+    {
+        switch (iconType)
+        {
+            case "copy":
+                onHoverCopyCss = "bg-secondary";
+                break;
+
+            case "generate":
+                onHoverGenerateCss = "bg-secondary";
+                break;
+
+            case "save":
+                onHoverSaveCss = "bg-secondary";
+                break;
+
+            default:
+
+                break;
+        }
+    }
+
+    private void OnEmojiMouseLeft()
+    {
+        onHoverCopyCss = string.Empty;
+        onHoverGenerateCss = string.Empty;
+        onHoverSaveCss = string.Empty;
     }
 }
-
-<!--
-    Blazor'da eventlar ile state güncellemesi yapılabilir. Mesela bir butona tıklanınca isLoading değeri true olacak şekilde güncellenebilir.
-    Bunu yapabilmek için @onclick="HandleChangeLoadingButtonClick" şeklinde bir event tanımlanır ve HandleChangeLoadingButtonClick adında bir metot
-    oluşturulur. 
--->
